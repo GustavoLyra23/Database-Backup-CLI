@@ -16,5 +16,13 @@ public class RegexUtil {
         return input.matches(dbParamsRegex);
     }
 
+    public static boolean isDoBackup(String input) {
+        return input.matches(doBackupRegex);
+    }
+
+    public static boolean isRestore(String input) {
+        return input.matches(restoreRegex);
+    }
+
 
 }

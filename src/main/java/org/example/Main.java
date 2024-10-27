@@ -15,12 +15,20 @@ public class Main {
         if (RegexUtil.isGenerateKey(command)) {
             System.out.println("Key: " + encryptionService.encodeKey(encryptionService.generateKey()));
         }
-
         if (RegexUtil.isDbParams(command)) {
             System.out.println("DB params are correct");
         } else {
             System.out.println("DB params are incorrect");
         }
+
+        if (RegexUtil.isDoBackup(command)) {
+            System.out.println("Backup is done");
+        } else {
+            System.out.println("Backup is not done");
+        }
+
+
+
 
 
     }
