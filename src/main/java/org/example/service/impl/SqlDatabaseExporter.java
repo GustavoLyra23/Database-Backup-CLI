@@ -1,6 +1,7 @@
 package org.example.service.impl;
 
 import org.example.service.DatabaseExporter;
+import org.example.util.ProgressBarUtil;
 
 import javax.crypto.Cipher;
 import javax.crypto.CipherOutputStream;
@@ -11,6 +12,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 import java.util.zip.GZIPOutputStream;
 
 public class SqlDatabaseExporter implements DatabaseExporter {
@@ -48,15 +50,22 @@ public class SqlDatabaseExporter implements DatabaseExporter {
             connection.setAutoCommit(false);
 
             List<String> tables = getTables(connection);
-            for (String table : tables) {
+            int totalTables = tables.size();
+
+            for (int i = 0; i < totalTables; i++) {
+                String table = tables.get(i);
                 String tableBackupFilePath = currentBackupPath + "/" + table + "_" + timestamp + (key != null ? "_encrypted" : "") + ".csv.gz";
                 SecretKey secretKey = key != null ? EncryptionService.getInstance().decodeKey(key) : null;
                 exportTableToFile(connection, table, tableBackupFilePath, secretKey);
+
+                ProgressBarUtil.printProgress(i + 1, totalTables);
+
+                Thread.sleep(200 * 4);
             }
 
             success = true;
             connection.commit();
-            System.out.println("Backup completo. Local: " + currentBackupPath);
+            System.out.println("\nBackup completo. Local: " + currentBackupPath);
 
         } catch (Exception e) {
             System.err.println("Erro ao fazer o backup, revertendo as operações...");
@@ -88,9 +97,7 @@ public class SqlDatabaseExporter implements DatabaseExporter {
              BufferedOutputStream bufferedOutputStream = new BufferedOutputStream(fileOutputStream, 8192);
              OutputStream finalOutputStream = (key != null) ? getEncryptedOutputStream(bufferedOutputStream, key) : new GZIPOutputStream(bufferedOutputStream);
              BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(finalOutputStream), 8192)) {
-
             writeColumnNames(resultSet, writer);
-
             writeTableData(resultSet, writer);
         }
     }
@@ -129,7 +136,7 @@ public class SqlDatabaseExporter implements DatabaseExporter {
 
     private void deleteDirectory(File directory) {
         if (directory.isDirectory()) {
-            for (File file : directory.listFiles()) {
+            for (File file : Objects.requireNonNull(directory.listFiles())) {
                 deleteDirectory(file);
             }
         }
