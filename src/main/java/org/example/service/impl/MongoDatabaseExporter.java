@@ -14,6 +14,7 @@ import javax.crypto.CipherOutputStream;
 import javax.crypto.SecretKey;
 import java.io.*;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.zip.GZIPOutputStream;
@@ -27,6 +28,7 @@ public class MongoDatabaseExporter implements DatabaseExporter {
 
     public MongoDatabaseExporter(String uri, String dbName) {
         this.uri = uri;
+        this.dbName = dbName;
     }
 
     @Override
@@ -35,11 +37,16 @@ public class MongoDatabaseExporter implements DatabaseExporter {
         String backupPath = MAIN_BACKUP_FOLDER_PATH + "/" + timestamp;
         File backupDir = new File(backupPath);
         if (!backupDir.mkdirs()) {
-            System.out.println("Error while creating file: " + backupPath);
+            System.out.println("Error while creating directory: " + backupPath);
             return;
         }
+
         try (var mongoClient = MongoClients.create(uri)) {
             MongoDatabase database = mongoClient.getDatabase(dbName);
+            if (entities == null) {
+                entities = database.listCollectionNames().into(new ArrayList<>());
+            }
+
             int i = 0;
             for (String collectionName : entities) {
                 MongoCollection<Document> collection = database.getCollection(collectionName);
@@ -47,15 +54,14 @@ public class MongoDatabaseExporter implements DatabaseExporter {
                 SecretKey secretKey = key != null ? EncryptionUtil.decodeKey(key) : null;
                 exportCollectionToFile(collection, filePath, secretKey);
                 ProgressBarUtil.printProgress(i + 1, entities.size());
-                Thread.sleep(200 * 4);
+                Thread.sleep(200 * 2);
                 i++;
             }
-            System.out.println("Backup completed: " + backupPath);
+            System.out.println("\nBackup completed: " + backupPath);
         } catch (Exception e) {
             System.err.println("Error while connecting to database: " + e.getMessage());
         }
     }
-
 
     private void exportCollectionToFile(MongoCollection<Document> collection, String filePath, SecretKey key) throws Exception {
         try (MongoCursor<Document> cursor = collection.find().iterator();

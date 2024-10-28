@@ -37,10 +37,10 @@ public class RegexUtil {
         if (matcher.find()) {
             String db = matcher.group(1);
             String url = matcher.group(2);
-            String password = matcher.group(3) != null ? matcher.group(3) : "";
-            String user = matcher.group(4) != null ? matcher.group(4) : "";
-            String dbName = matcher.group(5) != null ? matcher.group(5) : "";
-            return List.of(db, url, password, user, dbName);
+            String password = matcher.group(3);
+            String user = matcher.group(4);
+            String dbName = matcher.group(5);
+            return List.of(db, url, password != null ? password : "", user != null ? user : "", dbName);
         }
         return null;
     }

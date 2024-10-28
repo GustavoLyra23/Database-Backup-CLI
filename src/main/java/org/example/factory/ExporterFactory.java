@@ -17,7 +17,7 @@ public class ExporterFactory {
 
 
         if ("MONGO".equalsIgnoreCase(dbConnectionEntity.getDbType())) {
-            return new MongoDatabaseExporter(dbConnectionEntity.getUrl(), "Oi");
+            return new MongoDatabaseExporter(dbConnectionEntity.getUrl(), dbConnectionEntity.getDbName());
         }
         throw new UnsupportedOperationException("Unsupported database...");
     }

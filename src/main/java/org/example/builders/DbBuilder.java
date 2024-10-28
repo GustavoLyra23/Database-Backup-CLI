@@ -31,6 +31,7 @@ public class DbBuilder {
     }
 
     public DbBuilder DbName(String dbName) {
+        this.dbName = dbName;
         return this;
     }
 
