@@ -8,10 +8,21 @@ public class DbConnectionEntity {
     private String url;
     private String user;
     private String password;
+    private String dbName;
+
 
 
     public static DbBuilder builder() {
         return new DbBuilder();
+    }
+
+
+    public String getDbName() {
+        return dbName;
+    }
+
+    public void setDbName(String dbName) {
+        this.dbName = dbName;
     }
 
     public String getDbType() {

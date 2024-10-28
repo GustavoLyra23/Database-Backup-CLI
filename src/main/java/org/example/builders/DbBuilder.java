@@ -8,6 +8,7 @@ public class DbBuilder {
     private String url;
     private String user;
     private String password;
+    private String dbName;
 
     public DbBuilder dbType(String dbType) {
         this.dbType = dbType;
@@ -29,12 +30,17 @@ public class DbBuilder {
         return this;
     }
 
+    public DbBuilder DbName(String dbName) {
+        return this;
+    }
+
     public DbConnectionEntity build() {
         DbConnectionEntity dbConnectionEntity = new DbConnectionEntity();
         dbConnectionEntity.setDbType(dbType);
         dbConnectionEntity.setUrl(url);
         dbConnectionEntity.setUser(user);
         dbConnectionEntity.setPassword(password);
+        dbConnectionEntity.setDbName(dbName);
         return dbConnectionEntity;
     }
 

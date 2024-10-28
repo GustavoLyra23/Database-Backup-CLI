@@ -54,16 +54,17 @@ public class Main {
     }
 
     private static void setDbParams(String command) {
-        List<String> params = List.of(Objects.requireNonNull(RegexUtil.getDbParams(command)));
-        if (params.size() != 4) {
+        var params = RegexUtil.getDbParams(command);
+        if (params == null || params.size() < 2) {
             System.out.println("Invalid number of parameters.");
             return;
         }
         dbConnectionEntity = DbConnectionEntity.builder()
                 .dbType(params.get(0))
                 .url(params.get(1))
-                .password(params.get(2))
-                .user(params.get(3))
+                .password(params.size() > 2 && !params.get(2).isEmpty() ? params.get(2) : null)
+                .user(params.size() > 3 && !params.get(3).isEmpty() ? params.get(3) : null)
+                .DbName(params.size() > 4 && !params.get(4).isEmpty() ? params.get(4) : null)
                 .build();
         System.out.println("Database parameters set.");
     }
@@ -99,4 +100,4 @@ public class Main {
     private static void invalidCommand() {
         System.out.println("Invalid command.");
     }
-    }
+}

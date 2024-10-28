@@ -23,7 +23,7 @@ public class SqlDatabaseExporter implements DatabaseExporter {
     private final String password;
 
 
-    private static final String MAIN_BACKUP_FOLDER_PATH = System.getProperty("user.home") + "/backups";
+    private static final String MAIN_BACKUP_FOLDER_PATH = System.getProperty("user.home") + "/backups/sql";
 
     public SqlDatabaseExporter(String jdbcUrl, String user, String password) {
         this.jdbcUrl = jdbcUrl;
@@ -32,7 +32,7 @@ public class SqlDatabaseExporter implements DatabaseExporter {
     }
 
     @Override
-    public void exportDatabase(String key, List<String> selectedTables) {
+    public void exportDatabase(String key, List<String> entities) {
         EncryptionUtil.validateKey(key);
         String timestamp = new SimpleDateFormat("yyyy-MMdd_HHmmss").format(new Date());
         String currentBackupPath = MAIN_BACKUP_FOLDER_PATH + "/" + timestamp;
@@ -45,7 +45,7 @@ public class SqlDatabaseExporter implements DatabaseExporter {
         boolean success = false;
         try (Connection connection = DriverManager.getConnection(jdbcUrl, user, password)) {
             connection.setAutoCommit(false);
-            List<String> tables = (selectedTables == null || selectedTables.isEmpty()) ? getTables(connection) : selectedTables;
+            List<String> tables = (entities == null || entities.isEmpty()) ? getTables(connection) : entities;
             int totalTables = tables.size();
 
             for (int i = 0; i < totalTables; i++) {
