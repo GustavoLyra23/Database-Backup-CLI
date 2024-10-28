@@ -54,7 +54,7 @@ public class MongoDatabaseExporter implements DatabaseExporter {
                 SecretKey secretKey = key != null ? EncryptionUtil.decodeKey(key) : null;
                 exportCollectionToFile(collection, filePath, secretKey);
                 ProgressBarUtil.printProgress(i + 1, entities.size());
-                Thread.sleep(200 * 2);
+                Thread.sleep(1000);
                 i++;
             }
             System.out.println("\nBackup completed: " + backupPath);
