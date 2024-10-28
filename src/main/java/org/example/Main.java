@@ -1,43 +1,83 @@
 package org.example;
 
+import org.example.entities.DbConnectionEntity;
 import org.example.factory.ExporterFactory;
 import org.example.service.DatabaseExporter;
 import org.example.service.impl.DatabaseRestoreService;
-import org.example.service.impl.EncryptionService;
+import org.example.util.EncryptionUtil;
 import org.example.util.RegexUtil;
 
+import java.util.Map;
+import java.util.Objects;
 import java.util.Scanner;
 
 public class Main {
 
-    static String key;
+    static DbConnectionEntity dbConnectionEntity = new DbConnectionEntity();
+
 
     public static void main(String[] args) throws Exception {
-        EncryptionService encryptionService = EncryptionService.getInstance();
         DatabaseRestoreService restoreService = DatabaseRestoreService.getInstance();
         try (Scanner scanner = new Scanner(System.in)) {
             while (true) {
                 var command = scanner.nextLine();
-                checkCommand(command, encryptionService, restoreService);
+                checkCommand(command, restoreService);
             }
         }
     }
 
-    private static void checkCommand(String command, EncryptionService encryptionService, DatabaseRestoreService restoreService) throws Exception {
-        if (RegexUtil.isGenerateKey(command)) {
-            key = encryptionService.encodeKey(encryptionService.generateKey());
-            System.out.println("Key: " + key);
+
+    public static void checkCommand(String command, DatabaseRestoreService restoreService) {
+        Map<String, Runnable> commands = Map.of(
+                "--generateKey", Main::generateKey,
+                "--list", () -> listAll(restoreService),
+                "--doBackup", Main::doBackup);
+
+        if (RegexUtil.isDbParams(command)) {
+            setDbParams(command);
+        } else {
+            commands.getOrDefault(command.toLowerCase(), Main::invalidCommand).run();
         }
-        if (RegexUtil.isDbParams(command) || RegexUtil.isDoBackup(command)) {
-            DatabaseExporter exporter = ExporterFactory.createExporter("SQL", "jdbc:postgresql://localhost:5432/challenge-db", "postgres", "123");
-            exporter.exportDatabase(key);
-            System.out.println("DB params are correct");
+    }
+
+    private static void generateKey() {
+        var key = EncryptionUtil.encodeKey(Objects.requireNonNull(EncryptionUtil.generateKey()));
+        System.out.println("Key: " + key);
+    }
+
+    private static void setDbParams(String command) {
+        var params = RegexUtil.getDbParams(command);
+        if (params != null) {
+            dbConnectionEntity = DbConnectionEntity.builder()
+                    .dbType(params[0])
+                    .url(params[1])
+                    .password(params[2])
+                    .user(params[3])
+                    .build();
+            System.out.println("Database parameters set.");
+        } else {
+            System.out.println("Invalid parameters.");
+        }
+    }
+
+    private static void doBackup() {
+        if (dbConnectionEntity == null || dbConnectionEntity.getDbType() == null) {
+            System.out.println("Please set database parameters first.");
+            return;
         }
 
-        if (command.equalsIgnoreCase("--list")) {
-            System.out.println(restoreService.listAll());
-        }
+        DatabaseExporter exporter = ExporterFactory.createExporter(dbConnectionEntity);
+        exporter.exportDatabase(null, null);
+        System.out.println("Backup done.");
+    }
 
+    private static void listAll(DatabaseRestoreService restoreService) {
+        System.out.println(restoreService.listAll());
+    }
+
+    private static void invalidCommand() {
+        System.out.println("Invalid command.");
+    }
 
 
     }

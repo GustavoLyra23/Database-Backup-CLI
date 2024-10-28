@@ -15,7 +15,7 @@ public class DatabaseRestoreService {
         return instance;
     }
 
-    public void restoreDatabase(String key) throws Exception {
+    public void restoreDatabase(String key) {
         // Restore database
     }
 
@@ -25,7 +25,9 @@ public class DatabaseRestoreService {
             try {
                 StringBuilder sb = new StringBuilder();
                 sb.append("Folders: \n");
-                Files.list(path).forEach(p -> sb.append(p.getFileName()).append("\n"));
+                Files.list(path).forEach(p ->
+                        sb.append(p.getFileName())
+                                .append("\n"));
                 return sb.toString();
             } catch (IOException e) {
                 throw new RuntimeException("An error occurred while listing the directory contents.", e);

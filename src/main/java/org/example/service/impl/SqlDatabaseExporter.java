@@ -1,6 +1,7 @@
 package org.example.service.impl;
 
 import org.example.service.DatabaseExporter;
+import org.example.util.EncryptionUtil;
 import org.example.util.ProgressBarUtil;
 
 import javax.crypto.Cipher;
@@ -31,53 +32,45 @@ public class SqlDatabaseExporter implements DatabaseExporter {
     }
 
     @Override
-    public void exportDatabase(String key) throws Exception {
-        if (key != null && !EncryptionService.getInstance().isValidAESKey(key)) {
-            throw new IllegalArgumentException("A chave fornecida não é uma chave AES válida.");
-        }
-
-        String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+    public void exportDatabase(String key, List<String> selectedTables) {
+        EncryptionUtil.validateKey(key);
+        String timestamp = new SimpleDateFormat("yyyy-MM-dd_HHmmss").format(new Date());
         String currentBackupPath = MAIN_BACKUP_FOLDER_PATH + "/" + timestamp;
         File backupDir = new File(currentBackupPath);
-
         if (!backupDir.mkdirs()) {
-            throw new IOException("Falha ao criar a pasta de backup em: " + currentBackupPath);
+            System.out.println("Error while creating file: " + currentBackupPath);
+            return;
         }
 
         boolean success = false;
-
         try (Connection connection = DriverManager.getConnection(jdbcUrl, user, password)) {
             connection.setAutoCommit(false);
-
-            List<String> tables = getTables(connection);
+            List<String> tables = (selectedTables == null || selectedTables.isEmpty()) ? getTables(connection) : selectedTables;
             int totalTables = tables.size();
 
             for (int i = 0; i < totalTables; i++) {
                 String table = tables.get(i);
                 String tableBackupFilePath = currentBackupPath + "/" + table + "_" + timestamp + (key != null ? "_encrypted" : "") + ".csv.gz";
-                SecretKey secretKey = key != null ? EncryptionService.getInstance().decodeKey(key) : null;
+                SecretKey secretKey = key != null ? EncryptionUtil.decodeKey(key) : null;
                 exportTableToFile(connection, table, tableBackupFilePath, secretKey);
-
                 ProgressBarUtil.printProgress(i + 1, totalTables);
-
                 Thread.sleep(200 * 4);
             }
 
             success = true;
             connection.commit();
-            System.out.println("\nBackup completo. Local: " + currentBackupPath);
+            System.out.println("\nBackup completed: " + currentBackupPath);
 
         } catch (Exception e) {
-            System.err.println("Erro ao fazer o backup, revertendo as operações...");
+            System.err.println("Error while doing backup...");
             deleteDirectory(backupDir);
-            throw e;
-
         } finally {
             if (!success) {
                 deleteDirectory(backupDir);
             }
         }
     }
+
 
     private List<String> getTables(Connection connection) throws SQLException {
         List<String> tables = new ArrayList<>();
@@ -140,6 +133,8 @@ public class SqlDatabaseExporter implements DatabaseExporter {
                 deleteDirectory(file);
             }
         }
-        directory.delete();
+        if (!directory.delete()) {
+            System.err.println("Failed to delete: " + directory.getAbsolutePath());
+        }
     }
 }
