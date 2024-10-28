@@ -34,7 +34,7 @@ public class SqlDatabaseExporter implements DatabaseExporter {
     @Override
     public void exportDatabase(String key, List<String> selectedTables) {
         EncryptionUtil.validateKey(key);
-        String timestamp = new SimpleDateFormat("yyyy-MM-dd_HHmmss").format(new Date());
+        String timestamp = new SimpleDateFormat("yyyy-MMdd_HHmmss").format(new Date());
         String currentBackupPath = MAIN_BACKUP_FOLDER_PATH + "/" + timestamp;
         File backupDir = new File(currentBackupPath);
         if (!backupDir.mkdirs()) {
@@ -61,8 +61,14 @@ public class SqlDatabaseExporter implements DatabaseExporter {
             connection.commit();
             System.out.println("\nBackup completed: " + currentBackupPath);
 
+        } catch (SQLException e) {
+            System.err.println("Error while connecting to the database...");
+            deleteDirectory(backupDir);
+        } catch (InterruptedException e) {
+            System.err.println("Thread error...");
+            deleteDirectory(backupDir);
         } catch (Exception e) {
-            System.err.println("Error while doing backup...");
+            System.err.println("Error while exporting the database...");
             deleteDirectory(backupDir);
         } finally {
             if (!success) {

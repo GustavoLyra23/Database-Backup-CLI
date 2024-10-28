@@ -7,7 +7,7 @@ import java.util.List;
 public class MongoDatabaseExporter implements DatabaseExporter {
 
     @Override
-    public void exportDatabase(String key, List<String> selectedTables) throws Exception {
-
+    public void exportDatabase(String key, List<String> selectedTables) {
+        //TODO
     }
 }

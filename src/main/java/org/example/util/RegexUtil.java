@@ -7,9 +7,8 @@ public class RegexUtil {
 
     private static final String generateKeyRegex = "--generate\\s+key";
     private static final String dbParamsRegex = "--db\\s+(\\S+)\\s+--url\\s+(\\S+)\\s+--password\\s+(\\S+)\\s+--user\\s+(\\S+)";
-    private static final String doBackupRegex = "--do\\s+backup(\\s+--entity\\s+(\\[?\\s*[\\w,\\s]+]?))?(\\s+--key\\s+(\\S+))?";
+    private static final String doBackupRegex = "--do\\s+backup(?:\\s+--entity\\s+(\\[?[\\w,\\s]+]?))?(?:\\s+--key\\s+(\\S+))?";
     private static final String restoreRegex = "--restore\\s+(\\S+)(\\s+--key\\s+(\\S+))?";
-
 
     public static boolean isGenerateKey(String input) {
         return input.matches(generateKeyRegex);
@@ -28,20 +27,26 @@ public class RegexUtil {
     }
 
     public static String[] getDbParams(String input) {
-        Pattern pattern = Pattern.compile(dbParamsRegex);
-        Matcher matcher = pattern.matcher(input);
-
+        Matcher matcher = Pattern.compile(dbParamsRegex).matcher(input);
         if (matcher.find()) {
-            String db = matcher.group(1);
-            String url = matcher.group(2);
-            String password = matcher.group(3);
-            String user = matcher.group(4);
-            return new String[]{db, url, password, user};
+            return new String[]{matcher.group(1), matcher.group(2), matcher.group(3), matcher.group(4)};
         }
         return null;
     }
 
+    public static String getBackupKey(String input) {
+        Matcher matcher = Pattern.compile(doBackupRegex).matcher(input);
+        if (matcher.find()) {
+            return matcher.group(2);
+        }
+        return null;
+    }
 
-
-
+    public static String[] getBackupEntities(String input) {
+        Matcher matcher = Pattern.compile(doBackupRegex).matcher(input);
+        if (matcher.find() && matcher.group(1) != null) {
+            return matcher.group(1).replace("[", "").replace("]", "").split(",\\s*"); // Captura as entidades como uma lista separada por vírgulas
+        }
+        return null;
+    }
 }
