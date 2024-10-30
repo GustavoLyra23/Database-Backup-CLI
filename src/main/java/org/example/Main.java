@@ -3,7 +3,8 @@ package org.example;
 import org.example.entities.DbConnectionEntity;
 import org.example.factory.ExporterFactory;
 import org.example.service.DatabaseExporter;
-import org.example.service.impl.DatabaseRestoreService;
+import org.example.service.DatabaseRestorer;
+import org.example.service.impl.SQLRestorer;
 import org.example.util.EncryptionUtil;
 import org.example.util.RegexUtil;
 
@@ -16,7 +17,7 @@ public class Main {
     static DbConnectionEntity dbConnectionEntity = new DbConnectionEntity();
 
     public static void main(String[] args) {
-        DatabaseRestoreService restoreService = DatabaseRestoreService.getInstance();
+        DatabaseRestorer restoreService = SQLRestorer.getInstance();
         try (Scanner scanner = new Scanner(System.in)) {
             while (true) {
                 var command = scanner.nextLine();
@@ -25,7 +26,7 @@ public class Main {
         }
     }
 
-    public static void checkCommand(String command, DatabaseRestoreService restoreService) {
+    public static void checkCommand(String command, DatabaseRestorer restoreService) {
         if (RegexUtil.isGenerateKey(command)) {
             generateKey();
             return;
@@ -41,12 +42,41 @@ public class Main {
             return;
         }
 
-        if (command.equalsIgnoreCase("--list")) {
-            listAll(restoreService);
+        if (RegexUtil.isRestoreWithSavesAndKey(command)) {
+            doRestore(command, restoreService);
         } else {
             invalidCommand();
         }
+
+//        if (command.equalsIgnoreCase("--list")) {
+//            listAll(restoreService);
+//        } else {
+//            invalidCommand();
+//        }
+
     }
+
+    private static void doRestore(String command, DatabaseRestorer restoreService) {
+        String fileTypeDb = Objects.requireNonNull(RegexUtil.getFileTypeDb(command)).toLowerCase();
+        String fileName = RegexUtil.getFileName(command);
+        String[] savesArray = RegexUtil.getSaves(command);
+        List<String> saves = (savesArray != null) ? List.of(savesArray) : null;
+        String key = RegexUtil.getRestoreKey(command);
+
+        if (fileName == null || fileName.isEmpty()) {
+            System.out.println("Invalid restore parameters. Please provide a valid fileTypeDb and fileName.");
+            return;
+        }
+        try {
+            restoreService.restoreDatabase(key, saves, fileTypeDb, fileName, dbConnectionEntity);
+        } catch (IllegalArgumentException e) {
+            System.out.println("Error while restoring: " + e.getMessage());
+        } catch (UnsupportedOperationException e) {
+            System.out.println("Unsupported fileTypeDb.");
+        }
+    }
+
+
 
     private static void generateKey() {
         var key = EncryptionUtil.encodeKey(Objects.requireNonNull(EncryptionUtil.generateKey()));
@@ -55,11 +85,10 @@ public class Main {
 
     private static void setDbParams(String command) {
         var params = RegexUtil.getDbParams(command);
-        if (params == null || params.size() < 2) {
-            System.out.println("Invalid number of parameters.");
+        if (params == null) {
+            System.out.println("Invalid database parameters.");
             return;
         }
-
         dbConnectionEntity = DbConnectionEntity.builder()
                 .dbType(params.get(0))
                 .url(params.get(1))
@@ -90,13 +119,13 @@ public class Main {
         }
     }
 
-    private static void listAll(DatabaseRestoreService restoreService) {
-        try {
-            System.out.println(restoreService.listAll());
-        } catch (RuntimeException e) {
-            System.out.println(e.getMessage());
-        }
-    }
+//    private static void listAll(DatabaseRestorer restoreService) {
+//        try {
+//            System.out.println(restoreService.listAll());
+//        } catch (RuntimeException e) {
+//            System.out.println(e.getMessage());
+//        }
+//    }
 
     private static void invalidCommand() {
         System.out.println("Invalid command.");

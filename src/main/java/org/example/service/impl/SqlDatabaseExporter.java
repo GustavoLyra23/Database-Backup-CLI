@@ -1,5 +1,6 @@
 package org.example.service.impl;
 
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.example.service.DatabaseExporter;
 import org.example.util.EncryptionUtil;
 import org.example.util.ProgressBarUtil;
@@ -8,6 +9,7 @@ import javax.crypto.Cipher;
 import javax.crypto.CipherOutputStream;
 import javax.crypto.SecretKey;
 import java.io.*;
+import java.security.Security;
 import java.sql.*;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -22,10 +24,10 @@ public class SqlDatabaseExporter implements DatabaseExporter {
     private final String user;
     private final String password;
 
-
     private static final String MAIN_BACKUP_FOLDER_PATH = System.getProperty("user.home") + "/backups/sql";
 
     public SqlDatabaseExporter(String jdbcUrl, String user, String password) {
+        Security.addProvider(new BouncyCastleProvider());
         this.jdbcUrl = jdbcUrl;
         this.user = user;
         this.password = password;
@@ -33,7 +35,9 @@ public class SqlDatabaseExporter implements DatabaseExporter {
 
     @Override
     public void exportDatabase(String key, List<String> entities) {
-        EncryptionUtil.validateKey(key);
+        if (key != null) {
+            EncryptionUtil.validateKey(key);
+        }
         String timestamp = new SimpleDateFormat("yyyy-MMdd_HHmmss").format(new Date());
         String currentBackupPath = MAIN_BACKUP_FOLDER_PATH + "/" + timestamp;
         File backupDir = new File(currentBackupPath);
@@ -47,7 +51,6 @@ public class SqlDatabaseExporter implements DatabaseExporter {
             connection.setAutoCommit(false);
             List<String> tables = (entities == null || entities.isEmpty()) ? getTables(connection) : entities;
             int totalTables = tables.size();
-
             for (int i = 0; i < totalTables; i++) {
                 String table = tables.get(i);
                 String tableBackupFilePath = currentBackupPath + "/" + table + "_" + timestamp + (key != null ? "_encrypted" : "") + ".csv.gz";
@@ -61,12 +64,6 @@ public class SqlDatabaseExporter implements DatabaseExporter {
             connection.commit();
             System.out.println("\nBackup completed: " + currentBackupPath);
 
-        } catch (SQLException e) {
-            System.err.println("Error while connecting to the database...");
-            deleteDirectory(backupDir);
-        } catch (InterruptedException e) {
-            System.err.println("Thread error...");
-            deleteDirectory(backupDir);
         } catch (Exception e) {
             System.err.println("Error while exporting the database...");
             deleteDirectory(backupDir);
@@ -96,8 +93,37 @@ public class SqlDatabaseExporter implements DatabaseExporter {
              BufferedOutputStream bufferedOutputStream = new BufferedOutputStream(fileOutputStream, 8192);
              OutputStream finalOutputStream = (key != null) ? getEncryptedOutputStream(bufferedOutputStream, key) : new GZIPOutputStream(bufferedOutputStream);
              BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(finalOutputStream), 8192)) {
+
+            writeTableSchema(connection, tableName, writer);
             writeColumnNames(resultSet, writer);
             writeTableData(resultSet, writer);
+        }
+    }
+
+    private void writeTableSchema(Connection connection, String tableName, BufferedWriter writer) throws SQLException, IOException {
+        DatabaseMetaData metaData = connection.getMetaData();
+        try (ResultSet columns = metaData.getColumns(null, null, tableName, null)) {
+            StringBuilder createStatement = new StringBuilder("CREATE TABLE ").append(tableName).append(" (");
+            boolean first = true;
+            while (columns.next()) {
+                if (!first) {
+                    createStatement.append(", ");
+                }
+                String columnName = columns.getString("COLUMN_NAME");
+                String columnType = columns.getString("TYPE_NAME");
+                int columnSize = columns.getInt("COLUMN_SIZE");
+                createStatement.append(columnName).append(" ").append(columnType);
+                if (columnType.equalsIgnoreCase("VARCHAR") || columnType.equalsIgnoreCase("CHAR")) {
+                    createStatement.append("(").append(columnSize).append(")");
+                }
+                first = false;
+            }
+            createStatement.append(");");
+            writer.write("-- SCHEMA\n");
+            writer.write(createStatement.toString());
+            writer.newLine();
+            writer.write("-- DATA");
+            writer.newLine();
         }
     }
 
@@ -128,10 +154,12 @@ public class SqlDatabaseExporter implements DatabaseExporter {
 
     private OutputStream getEncryptedOutputStream(OutputStream fileOutputStream, SecretKey key) throws Exception {
         GZIPOutputStream gzipOutputStream = new GZIPOutputStream(fileOutputStream, 8192);
-        Cipher cipher = Cipher.getInstance("AES");
+        Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding", "BC");
         cipher.init(Cipher.ENCRYPT_MODE, key);
         return new CipherOutputStream(gzipOutputStream, cipher);
     }
+
+
 
     private void deleteDirectory(File directory) {
         if (directory.isDirectory()) {
