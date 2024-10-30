@@ -6,7 +6,7 @@ This project is a powerful and easy-to-use command-line tool (CLI) designed to h
 
 ## 🌟 Key Features
 - **Supports SQL and MongoDB**: Backup and restore both SQL and NoSQL databases.
-- **Encryption Option**: Secure your backups with an encryption AES key.
+- **Encryption Option**: Secure your backups with an encryption key(AES).
 - **Automatic Compression**: Reduce the file size of your backups.
 - **Progress Feedback**: Shows progress with a bar to track the operation.
 
@@ -22,48 +22,55 @@ This project is a powerful and easy-to-use command-line tool (CLI) designed to h
 
 ## 🚀 Running the Project
 ### General Commands
-1. **Backup**:
-    - **SQL**:
-      ```bash
-      java -jar database-backup.jar --backup --type=sql --key=YOUR_KEY --entities=table1,table2
-      ```
-    - **MongoDB**:
-      ```bash
-      java -jar database-backup.jar --backup --type=mongo --key=YOUR_KEY --entities=collection1,collection2
-      ```
 
-2. **Restore**:
-    - **SQL**:
-      ```bash
-      java -jar database-backup.jar --restore --type=sql --key=YOUR_KEY --file=my_backup.sql.gz
-      ```
-    - **MongoDB**:
-      ```bash
-      java -jar database-backup.jar --restore --type=mongo --key=YOUR_KEY --file=my_backup_mongo.json.gz
-      ```
+1. **Generate Encryption Key**:
+   ```bash
+   --generate key
+   ```
+
+2. **Set Database Parameters**:
+   ```bash
+   --db <dbType> --url <url> [--password <password>] [--user <user>] [--dbName <database name>]
+   ```
+
+3. **Backup**:
+   ```bash
+   --do backup [--entity [entity1, entity2]] [--key <encryption key>]
+   ```
+
+4. **Restore**:
+   ```bash
+   --restore --foldertypedb <mongo/sql> --folderName <folder name> [--saves [save1, save2]] [--key <encryption key>]
+   ```
+
+5. **List Backups**:
+   ```bash
+   --list [mongo/sql] [--folder <folder name>]
+   ```
 
 ### Command Details
-- `--backup`: Starts the backup process.
-- `--restore`: Initiates data restoration.
-- `--type`: Specifies the database type (`sql` or `mongo`).
-- `--key`: Optional. Key for encrypting or decrypting data.
-- `--entities`: Optional. List of specific tables or collections to include.
-- `--file`: Specifies the backup file for restoration.
 
+- `--generate key`: Generates and displays an encryption key.
+- `--db`: Specifies database parameters.
+- `--do backup`: Starts the backup process.
+- `--restore`: Initiates data restoration with database type, folder name, and optional saves or key.
+- `--list`: Lists available backups, optionally filtered by database type and folder.
+- `--help`: Lists all the available commands.
 ## 🔑 Backup Encryption
 To enable encryption, pass a key with the `--key` parameter. This ensures that only someone with the key can restore the backup.
 
 > **Important**: Keep your key safe! Without it, encrypted backups cannot be restored.
 
 ## ⚙️ Practical Example
-Suppose you want to back up the `users` database and the `accounts` table in your SQL database:
+
+Suppose you want to back up the `users` and `accounts` tables in your SQL database with encryption:
 ```bash
-java -jar database-backup.jar --backup --type=sql --entities=users,accounts --key=MY_SECURE_KEY
+--do backup --entity [users, accounts] --key MY_SECURE_KEY
 ```
 
 To restore, simply run:
 ```bash
-java -jar database-backup.jar --restore --type=sql --file=backup.sql.gz --key=MY_SECURE_KEY
+--restore --foldertypedb sql --folderName my_backup_folder --key MY_SECURE_KEY
 ```
 
 ## 📂 Backup Directory Structure
