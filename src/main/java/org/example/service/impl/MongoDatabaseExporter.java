@@ -22,9 +22,8 @@ import java.util.zip.GZIPOutputStream;
 public class MongoDatabaseExporter implements DatabaseExporter {
 
     private final String uri;
-    private String dbName;
+    private final String dbName;
     private static final String MAIN_BACKUP_FOLDER_PATH = System.getProperty("user.home") + "/backups/mongo";
-
 
     public MongoDatabaseExporter(String uri, String dbName) {
         this.uri = uri;
@@ -33,6 +32,9 @@ public class MongoDatabaseExporter implements DatabaseExporter {
 
     @Override
     public void exportDatabase(String key, List<String> entities) {
+        if (key != null) {
+            EncryptionUtil.validateKey(key);
+        }
         String timestamp = new SimpleDateFormat("yyyy-MMdd_HHmmss").format(new Date());
         String backupPath = MAIN_BACKUP_FOLDER_PATH + "/" + timestamp;
         File backupDir = new File(backupPath);
@@ -79,10 +81,8 @@ public class MongoDatabaseExporter implements DatabaseExporter {
     }
 
     private OutputStream getEncryptedOutputStream(OutputStream outputStream, SecretKey key) throws Exception {
-        Cipher cipher = Cipher.getInstance("AES");
+        Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding", "BC");
         cipher.init(Cipher.ENCRYPT_MODE, key);
         return new CipherOutputStream(outputStream, cipher);
     }
-
-
 }

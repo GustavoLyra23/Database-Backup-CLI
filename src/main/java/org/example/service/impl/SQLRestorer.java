@@ -131,6 +131,7 @@ public class SQLRestorer implements DatabaseRestorer {
 
     private String extractTableName(String fileName) {
         int lastUnderscoreIndex = fileName.lastIndexOf("_2");
+        //TODO: ensure it works in 3000s
         if (lastUnderscoreIndex != -1) {
             return fileName.substring(0, lastUnderscoreIndex);
         }

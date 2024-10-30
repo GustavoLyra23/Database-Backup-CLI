@@ -73,6 +73,7 @@ public class Main {
             System.out.println("Error while restoring: " + e.getMessage());
         } catch (UnsupportedOperationException e) {
             System.out.println("Unsupported fileTypeDb.");
+
         }
     }
 

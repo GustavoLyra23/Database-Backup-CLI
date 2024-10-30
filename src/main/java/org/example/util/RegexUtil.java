@@ -13,8 +13,8 @@ public class RegexUtil {
             "(?:\\s+--user\\s+(\\S+))?" +
             "(?:\\s+--dbName\\s+(\\S+))?";
     private static final String doBackupRegex = "--do\\s+backup(?:\\s+--entity\\s+(\\[?[\\w,\\s]+]?))?(?:\\s+--key\\s+(\\S+))?";
-    private static final String restoreWithSavesAndKeyRegex = "--restore\\s+--fileTypeDb\\s+(mongo|sql)" +
-            "\\s+--fileName\\s+(\\S+)" +
+    private static final String restoreWithSavesAndKeyRegex = "--restore\\s+--foldertypedb\\s+(mongo|sql)" +
+            "\\s+--folderName\\s+(\\S+)" +
             "(?:\\s+--saves\\s+\\[(\\s*\\w+(?:,\\s*\\w+)*\\s*)])?" +
             "(?:\\s+--key\\s+(\\S+))?";
 
