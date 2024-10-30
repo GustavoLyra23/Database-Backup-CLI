@@ -12,7 +12,10 @@ import org.example.util.ProgressBarUtil;
 import javax.crypto.Cipher;
 import javax.crypto.CipherInputStream;
 import javax.crypto.SecretKey;
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.FileInputStream;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -78,7 +81,7 @@ public class MongoDatabaseRestorer implements DatabaseRestorer {
 
             String collectionName = extractCollectionName(fileName);
             MongoCollection<Document> collection = database.getCollection(collectionName);
-            collection.drop(); // Drop existing data to avoid duplicates
+            collection.drop();
 
             String line;
             while ((line = reader.readLine()) != null) {

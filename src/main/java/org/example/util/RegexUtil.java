@@ -17,6 +17,8 @@ public class RegexUtil {
             "\\s+--folderName\\s+(\\S+)" +
             "(?:\\s+--saves\\s+\\[(\\s*\\w+(?:,\\s*\\w+)*\\s*)])?" +
             "(?:\\s+--key\\s+(\\S+))?";
+    private static final String listDbTypeRegex = "--list\\s+(mongo|sql)?(?:\\s+--folder\\s+(\\S+))?";
+
 
     public static boolean isGenerateKey(String input) {
         return input.matches(generateKeyRegex);
@@ -33,6 +35,11 @@ public class RegexUtil {
     public static boolean isRestoreWithSavesAndKey(String input) {
         return input.matches(restoreWithSavesAndKeyRegex);
     }
+
+    public static boolean isListCommand(String input) {
+        return input.matches(listDbTypeRegex);
+    }
+
 
     public static List<String> getDbParams(String input) {
         try {
@@ -100,4 +107,23 @@ public class RegexUtil {
         }
         return null;
     }
+
+    public static String getDbType(String input) {
+        Matcher matcher = Pattern.compile(listDbTypeRegex).matcher(input);
+        if (matcher.find()) {
+            return matcher.group(1);
+        }
+        return null;
+    }
+
+    public static String getFolderName(String input) {
+        Matcher matcher = Pattern.compile(listDbTypeRegex).matcher(input);
+        if (matcher.find()) {
+            return matcher.group(2);
+        }
+        return null;
+    }
+
+
+
 }

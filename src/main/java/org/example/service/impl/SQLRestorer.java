@@ -121,7 +121,6 @@ public class SQLRestorer implements DatabaseRestorer {
         }
     }
 
-
     private InputStream getDecryptedInputStream(InputStream encryptedInputStream, String key) throws Exception {
         SecretKey secretKey = EncryptionUtil.decodeKey(key);
         Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding", "BC");
