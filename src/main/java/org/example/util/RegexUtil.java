@@ -4,6 +4,8 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static org.example.util.UI.showInvalidCommand;
+
 public class RegexUtil {
 
     private static final String generateKeyRegex = "--generate\\s+key";
@@ -55,7 +57,7 @@ public class RegexUtil {
                         List.of(db, url, password != null ? password : "", user != null ? user : "", dbName);
             }
         } catch (Exception e) {
-            System.out.println("Invalid db parameters. Please provide valid parameters.");
+            showInvalidCommand();
         }
         return null;
     }

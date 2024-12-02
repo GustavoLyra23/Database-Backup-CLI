@@ -19,6 +19,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.zip.GZIPOutputStream;
 
+import static org.example.util.UI.exportingDbMessage;
+
 public class MongoDatabaseExporter implements DatabaseExporter {
 
     private final String uri;
@@ -32,6 +34,7 @@ public class MongoDatabaseExporter implements DatabaseExporter {
 
     @Override
     public void exportDatabase(String key, List<String> entities) {
+        exportingDbMessage();
         if (key != null) {
             EncryptionUtil.validateKey(key);
         }

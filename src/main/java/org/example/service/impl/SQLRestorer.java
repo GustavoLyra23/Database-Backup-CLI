@@ -6,7 +6,9 @@ import org.example.service.DatabaseRestorer;
 import org.example.util.EncryptionUtil;
 import org.example.util.ProgressBarUtil;
 
-import javax.crypto.*;
+import javax.crypto.Cipher;
+import javax.crypto.CipherInputStream;
+import javax.crypto.SecretKey;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -36,7 +38,7 @@ public class SQLRestorer implements DatabaseRestorer {
         Path backupPath = Paths.get(System.getProperty("user.home"), "backups", fileDbType, fileName);
 
         if (!Files.isDirectory(backupPath)) {
-            System.out.println("Backup directory not found: " + backupPath);
+            System.out.println("Backup directory not found❗: " + backupPath);
             return;
         }
 
@@ -130,7 +132,7 @@ public class SQLRestorer implements DatabaseRestorer {
 
     private String extractTableName(String fileName) {
         int lastUnderscoreIndex = fileName.lastIndexOf("_2");
-        //TODO: ensure it works in 3000s
+        //TODO: ensure it works in 3000s as well :)
         if (lastUnderscoreIndex != -1) {
             return fileName.substring(0, lastUnderscoreIndex);
         }
@@ -169,7 +171,6 @@ public class SQLRestorer implements DatabaseRestorer {
 
     private void insertData(String line, String tableName, Connection connection) throws SQLException {
         if (line == null || line.isEmpty()) return;
-
         String[] values = line.split(",");
         String placeholders = String.join(",", java.util.Collections.nCopies(values.length, "?"));
         String query = "INSERT INTO " + tableName + " VALUES (" + placeholders + ")";
@@ -183,7 +184,6 @@ public class SQLRestorer implements DatabaseRestorer {
             for (int i = 0; i < values.length; i++) {
                 int columnType = metaData.getColumnType(i + 1);
                 String value = values[i].trim();
-
                 switch (columnType) {
                     case Types.BIGINT:
                         preparedStatement.setLong(i + 1, Long.parseLong(value));

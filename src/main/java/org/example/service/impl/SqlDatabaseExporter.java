@@ -18,6 +18,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.zip.GZIPOutputStream;
 
+import static org.example.util.UI.exportingDbMessage;
+
 public class SqlDatabaseExporter implements DatabaseExporter {
 
     private final String jdbcUrl;
@@ -35,6 +37,7 @@ public class SqlDatabaseExporter implements DatabaseExporter {
 
     @Override
     public void exportDatabase(String key, List<String> entities) {
+        exportingDbMessage();
         if (key != null) {
             EncryptionUtil.validateKey(key);
         }
@@ -42,7 +45,7 @@ public class SqlDatabaseExporter implements DatabaseExporter {
         String currentBackupPath = MAIN_BACKUP_FOLDER_PATH + "/" + timestamp;
         File backupDir = new File(currentBackupPath);
         if (!backupDir.mkdirs()) {
-            System.out.println("Error while creating file: " + currentBackupPath);
+            System.out.println("Error while creating file❗: " + currentBackupPath);
             return;
         }
 
@@ -65,7 +68,7 @@ public class SqlDatabaseExporter implements DatabaseExporter {
             System.out.println("\nBackup completed: " + currentBackupPath);
 
         } catch (Exception e) {
-            System.err.println("Error while exporting the database...");
+            System.err.println("Error while exporting the database❗...");
             deleteDirectory(backupDir);
         } finally {
             if (!success) {
@@ -168,7 +171,7 @@ public class SqlDatabaseExporter implements DatabaseExporter {
             }
         }
         if (!directory.delete()) {
-            System.err.println("Failed to delete: " + directory.getAbsolutePath());
+            System.err.println("Failed to delete❗: " + directory.getAbsolutePath());
         }
     }
 }

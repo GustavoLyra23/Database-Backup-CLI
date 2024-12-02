@@ -1,4 +1,4 @@
-package org.example.builders;
+package org.example.entities.builders;
 
 import org.example.entities.DbConnectionEntity;
 

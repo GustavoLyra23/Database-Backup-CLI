@@ -15,10 +15,9 @@ public class ExporterFactory {
             return new SqlDatabaseExporter(dbConnectionEntity.getUrl(), dbConnectionEntity.getUser(), dbConnectionEntity.getPassword());
         }
 
-
         if ("MONGO".equalsIgnoreCase(dbConnectionEntity.getDbType())) {
             return new MongoDatabaseExporter(dbConnectionEntity.getUrl(), dbConnectionEntity.getDbName());
         }
-        throw new UnsupportedOperationException("Unsupported database...");
+        throw new UnsupportedOperationException("Unsupported database❗...");
     }
 }

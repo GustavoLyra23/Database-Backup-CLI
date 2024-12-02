@@ -24,7 +24,7 @@ public class EncryptionUtil {
             keyGenerator.init(128);
             return keyGenerator.generateKey();
         } catch (NoSuchAlgorithmException | NoSuchProviderException e) {
-            System.out.println("Algorithm not found");
+            System.out.println("Algorithm not found❗");
             return null;
         }
     }
@@ -42,14 +42,14 @@ public class EncryptionUtil {
             int keyLength = decodedKey.length;
             return keyLength == 16 || keyLength == 24 || keyLength == 32;
         } catch (IllegalArgumentException e) {
-            System.out.println("Failed to decode key: " + e.getMessage());
+            System.out.println("Failed to decode key❗: " + e.getMessage());
             return false;
         }
     }
 
     public static SecretKey decodeKey(String encodedKey) {
         if (!isValidAESKey(encodedKey)) {
-            throw new IllegalArgumentException("Invalid AES key.");
+            throw new IllegalArgumentException("Invalid AES key❗.");
         }
         byte[] decodedKey = Base64.getDecoder().decode(encodedKey);
         return new SecretKeySpec(decodedKey, "AES");

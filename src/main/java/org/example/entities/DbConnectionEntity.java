@@ -1,21 +1,17 @@
 package org.example.entities;
 
-import org.example.builders.DbBuilder;
+import org.example.entities.builders.DbBuilder;
 
 public class DbConnectionEntity {
-
     private String dbType;
     private String url;
     private String user;
     private String password;
     private String dbName;
 
-
-
     public static DbBuilder builder() {
         return new DbBuilder();
     }
-
 
     public String getDbName() {
         return dbName;
