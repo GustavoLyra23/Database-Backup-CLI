@@ -1,91 +1,115 @@
-
 # Database Backup & Restore CLI Utility
 
-## 📖 Overview
-This project is a powerful and easy-to-use command-line tool (CLI) designed to help you perform **backups and restores of multiple databases**, including **SQL** and **MongoDB**, with options for encryption and compression for added security. Developed in Java, the utility automates the backup and restore process with a user-friendly interface.
+A command-line utility for performing database backups and restorations, supporting both SQL and MongoDB databases with encryption and compression capabilities.
 
-## 🌟 Key Features
-- **Supports SQL and MongoDB**: Backup and restore both SQL and NoSQL databases.
-- **Encryption Option**: Secure your backups with an encryption key(AES).
-- **Automatic Compression**: Reduce the file size of your backups.
-- **Progress Feedback**: Shows progress with a bar to track the operation.
+## Overview
 
-## 🛠️ Project Setup
-1. **Requirements**:
-    - **Java 21** or higher installed.
-    - CLI tools such as **Terminal** or **Command Prompt**.
-2. **Clone the Repository**:
-   ```bash
-   git clone https://github.com/YourUsername/DatabaseBackupProject.git
-   cd DatabaseBackupProject
-   ```
+This Java-based CLI tool automates database backup and restore operations with built-in support for encryption, compression, and progress tracking. It provides a straightforward interface for managing database backups across different database types.
 
-## 🚀 Running the Project
-### General Commands
+## Features
 
-1. **Generate Encryption Key**:
-   ```bash
-   --generate key
-   ```
+- Multi-database support (SQL and MongoDB)
+- AES encryption for secure backups
+- Automatic compression
+- Real-time progress monitoring
+- Flexible restoration options
 
-2. **Set Database Parameters**:
-   ```bash
-   --db <dbType> --url <url> [--password <password>] [--user <user>] [--dbName <database name>]
-   ```
+## Prerequisites
 
-3. **Backup**:
-   ```bash
-   --do backup [--entity [entity1, entity2]] [--key <encryption key>]
-   ```
+- Java 21 or later
+- Access to command-line interface
+- Database connection credentials
 
-4. **Restore**:
-   ```bash
-   --restore --foldertypedb <mongo/sql> --folderName <folder name> [--saves [save1, save2]] [--key <encryption key>]
-   ```
+## Installation
 
-5. **List Backups**:
-   ```bash
-   --list [mongo/sql] [--folder <folder name>]
-   ```
+```bash
+git clone https://github.com/YourUsername/DatabaseBackupProject.git
+cd DatabaseBackupProject
+```
 
-### Command Details
+## Usage
 
-- `--generate key`: Generates and displays an encryption key.
-- `--db`: Specifies database parameters.
-- `--do backup`: Starts the backup process.
-- `--restore`: Initiates data restoration with database type, folder name, and optional saves or key.
-- `--list`: Lists available backups, optionally filtered by database type and folder.
-- `--help`: Lists all the available commands.
-## 🔑 Backup Encryption
-To enable encryption, pass a key with the `--key` parameter. This ensures that only someone with the key can restore the backup.
+### Key Management
 
-> **Important**: Keep your key safe! Without it, encrypted backups cannot be restored.
+Generate a new encryption key:
+```bash
+--generate key
+```
 
-## ⚙️ Practical Example
+### Database Configuration
 
-Suppose you want to back up the `users` and `accounts` tables in your SQL database with encryption:
+Set database connection parameters:
+```bash
+--db <dbType> --url <url> [--password <password>] [--user <user>] [--dbName <database name>]
+```
+
+### Backup Operations
+
+Create a new backup:
+```bash
+--do backup [--entity [entity1, entity2]] [--key <encryption key>]
+```
+
+### Restore Operations
+
+Restore from backup:
+```bash
+--restore --foldertypedb <mongo/sql> --folderName <folder name> [--saves [save1, save2]] [--key <encryption key>]
+```
+
+### Backup Management
+
+List available backups:
+```bash
+--list [mongo/sql] [--folder <folder name>]
+```
+
+View available commands:
+```bash
+--help
+```
+
+## Security
+
+The utility uses AES encryption for backup security. When using encryption:
+
+- Store encryption keys securely
+- Required for both backup and restore operations
+- Cannot recover encrypted backups without the original key
+
+## Example Workflow
+
+1. Configure database connection:
+```bash
+--db sql --url jdbc:mysql://localhost:3306 --user admin --password securepass --dbName production
+```
+
+2. Create encrypted backup:
 ```bash
 --do backup --entity [users, accounts] --key MY_SECURE_KEY
 ```
 
-To restore, simply run:
+3. Restore specific tables:
 ```bash
---restore --foldertypedb sql --folderName my_backup_folder --key MY_SECURE_KEY
+--restore --foldertypedb sql --folderName backup_20250128 --key MY_SECURE_KEY
 ```
 
-## 📂 Backup Directory Structure
-Backups are saved in the `backups` folder in the user’s directory:
+## Backup Storage
+
+Backups are automatically organized in the user's home directory:
+
 ```
-~/
-└── backups/
-    ├── sql/
-    │   └── backup_yyyyMMdd_HHmmss.sql.gz
-    └── mongo/
-        └── backup_yyyyMMdd_HHmmss.json.gz
+~/backups/
+├── sql/
+│   └── backup_yyyyMMdd_HHmmss.sql.gz
+└── mongo/
+    └── backup_yyyyMMdd_HHmmss.json.gz
 ```
 
-## Support and Contributions
-Feel free to open an **Issue** or **Pull Request** on GitHub. I would love to hear your feedback and suggestions for improving this project.
-## ⚠️ Disclaimer
-This application performs critical database operations. I recommend conducting **tests in a secure environment** before using it in production.
-cc: https://roadmap.sh/projects/database-backup-utility
+## Contributing
+
+We welcome contributions to improve the utility. Please submit issues and pull requests through our GitHub repository.
+
+## Security Notice
+
+This tool performs critical database operations. Always test thoroughly in a non-production environment before using in production systems.
