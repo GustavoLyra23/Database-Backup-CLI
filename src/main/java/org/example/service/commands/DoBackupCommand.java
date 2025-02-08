@@ -11,7 +11,6 @@ import java.util.List;
 public class DoBackupCommand implements Command {
     private final DbConnectionEntity dbConnectionEntity;
 
-
     public DoBackupCommand(DbConnectionEntity dbConnectionEntity) {
         this.dbConnectionEntity = dbConnectionEntity;
     }

@@ -12,17 +12,19 @@ public class CommandFactory {
     }
 
     public Command getCommand(String command) {
-        if (command.startsWith("--generate key")) {
+        //love if else <3
+        if (command.contains("--generate key")) {
             return new GenerateKeyCommand();
-        } else if (command.startsWith("--db")) {
+        } else if (command.contains("--db")) {
             return new SetDbParamsCommand(dbConnectionEntity);
-        } else if (command.startsWith("--do backup")) {
+        } else if (command.contains("--do backup")) {
             return new DoBackupCommand(dbConnectionEntity);
-        } else if (command.startsWith("--restore")) {
+        } else if (command.contains("--restore")) {
             return new DoRestoreCommand(dbConnectionEntity);
-        } else if (command.startsWith("--list")) {
+        } else if (command.contains("--list")) {
             return new ListAllCommand();
+        } else {
+            return null;
         }
-        return null;
     }
 }
