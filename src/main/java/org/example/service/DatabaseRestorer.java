@@ -1,10 +1,10 @@
 package org.example.service;
 
-import org.example.entities.DbConnectionEntity;
+import org.example.entities.ConnectionEntity;
 
 import java.util.List;
 
 public interface DatabaseRestorer {
 
-    void restoreDatabase(String key, List<String> saves, String fileDbType, String fileName, DbConnectionEntity dbConnectionEntity);
+    void restoreDatabase(String key, List<String> saves, String fileDbType, String fileName, ConnectionEntity connectionEntity);
 }

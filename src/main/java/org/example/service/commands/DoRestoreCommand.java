@@ -1,6 +1,6 @@
 package org.example.service.commands;
 
-import org.example.entities.DbConnectionEntity;
+import org.example.entities.ConnectionEntity;
 import org.example.service.Command;
 import org.example.service.DatabaseRestorer;
 import org.example.service.impl.MongoDatabaseRestorer;
@@ -11,14 +11,14 @@ import java.util.List;
 import java.util.Objects;
 
 public class DoRestoreCommand implements Command {
-    private final DbConnectionEntity dbConnectionEntity;
+    private final ConnectionEntity connectionEntity;
 
-    public DoRestoreCommand(DbConnectionEntity dbConnectionEntity) {
-        this.dbConnectionEntity = dbConnectionEntity;
+    public DoRestoreCommand(ConnectionEntity connectionEntity) {
+        this.connectionEntity = connectionEntity;
     }
 
     @Override
-    public void execute(String command) {
+    public synchronized void execute(String command) {
         DatabaseRestorer restoreService;
         String fileTypeDb = Objects.requireNonNull(RegexUtil.getFileTypeDb(command)).toLowerCase();
         if (fileTypeDb.equalsIgnoreCase("mongo")) {
@@ -37,7 +37,7 @@ public class DoRestoreCommand implements Command {
             return;
         }
         try {
-            restoreService.restoreDatabase(key, saves, fileTypeDb, fileName, dbConnectionEntity);
+            restoreService.restoreDatabase(key, saves, fileTypeDb, fileName, connectionEntity);
         } catch (IllegalArgumentException e) {
             System.out.println("Error while restoring❗: " + e.getMessage());
         } catch (UnsupportedOperationException e) {

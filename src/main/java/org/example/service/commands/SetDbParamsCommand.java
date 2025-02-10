@@ -1,14 +1,14 @@
 package org.example.service.commands;
 
-import org.example.entities.DbConnectionEntity;
+import org.example.entities.ConnectionEntity;
 import org.example.service.Command;
 import org.example.util.RegexUtil;
 
 public class SetDbParamsCommand implements Command {
-    private final DbConnectionEntity dbConnectionEntity;
+    private final ConnectionEntity connectionEntity;
 
-    public SetDbParamsCommand(DbConnectionEntity dbConnectionEntity) {
-        this.dbConnectionEntity = dbConnectionEntity;
+    public SetDbParamsCommand(ConnectionEntity connectionEntity) {
+        this.connectionEntity = connectionEntity;
     }
 
     @Override
@@ -19,11 +19,11 @@ public class SetDbParamsCommand implements Command {
             return;
         }
 
-        dbConnectionEntity.setDbType(params.get(0));
-        dbConnectionEntity.setUrl(params.get(1));
-        dbConnectionEntity.setPassword(params.size() > 2 && !params.get(2).isEmpty() ? params.get(2) : null);
-        dbConnectionEntity.setUser(params.size() > 3 && !params.get(3).isEmpty() ? params.get(3) : null);
-        dbConnectionEntity.setDbName(params.size() > 4 && params.get(4) != null ? params.get(4) : null);
+        connectionEntity.setDbType(params.get(0));
+        connectionEntity.setUrl(params.get(1));
+        connectionEntity.setPassword(params.size() > 2 && !params.get(2).isEmpty() ? params.get(2) : null);
+        connectionEntity.setUser(params.size() > 3 && !params.get(3).isEmpty() ? params.get(3) : null);
+        connectionEntity.setDbName(params.size() > 4 && params.get(4) != null ? params.get(4) : null);
         System.out.println("Database parameters set.");
     }
 }

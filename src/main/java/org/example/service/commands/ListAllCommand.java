@@ -9,9 +9,8 @@ import java.nio.file.Path;
 
 public class ListAllCommand implements Command {
     @Override
-    public void execute(String command) {
+    public synchronized void execute(String command) {
         Path backupsPath = Path.of(System.getProperty("user.home") + "/backups");
-
         try {
             String dbType = RegexUtil.getDbType(command);
             String folderName = RegexUtil.getFolderName(command);

@@ -1,7 +1,7 @@
 package org.example.service.impl;
 
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
-import org.example.entities.DbConnectionEntity;
+import org.example.entities.ConnectionEntity;
 import org.example.service.DatabaseRestorer;
 import org.example.util.EncryptionUtil;
 import org.example.util.ProgressBarUtil;
@@ -34,7 +34,7 @@ public class SQLRestorer implements DatabaseRestorer {
     }
 
     @Override
-    public void restoreDatabase(String key, List<String> saves, String fileDbType, String fileName, DbConnectionEntity dbConnectionEntity) {
+    public void restoreDatabase(String key, List<String> saves, String fileDbType, String fileName, ConnectionEntity connectionEntity) {
         Path backupPath = Paths.get(System.getProperty("user.home"), "backups", fileDbType, fileName);
 
         if (!Files.isDirectory(backupPath)) {
@@ -55,8 +55,8 @@ public class SQLRestorer implements DatabaseRestorer {
                 return;
             }
 
-            try (Connection connection = DriverManager.getConnection(dbConnectionEntity.getUrl(),
-                    dbConnectionEntity.getUser(), dbConnectionEntity.getPassword())) {
+            try (Connection connection = DriverManager.getConnection(connectionEntity.getUrl(),
+                    connectionEntity.getUser(), connectionEntity.getPassword())) {
                 int totalFiles = fileList.size();
                 for (int i = 0; i < totalFiles; i++) {
                     Path filePath = fileList.get(i);

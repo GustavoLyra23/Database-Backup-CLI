@@ -4,7 +4,7 @@ import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import org.bson.Document;
-import org.example.entities.DbConnectionEntity;
+import org.example.entities.ConnectionEntity;
 import org.example.service.DatabaseRestorer;
 import org.example.util.EncryptionUtil;
 import org.example.util.ProgressBarUtil;
@@ -34,7 +34,7 @@ public class MongoDatabaseRestorer implements DatabaseRestorer {
     }
 
     @Override
-    public void restoreDatabase(String key, List<String> collections, String fileDbType, String fileName, DbConnectionEntity dbConnectionEntity) {
+    public void restoreDatabase(String key, List<String> collections, String fileDbType, String fileName, ConnectionEntity connectionEntity) {
         Path backupPath = Paths.get(System.getProperty("user.home"), "backups", fileDbType, fileName);
 
         if (!Files.isDirectory(backupPath)) {
@@ -42,8 +42,8 @@ public class MongoDatabaseRestorer implements DatabaseRestorer {
             return;
         }
 
-        try (var mongoClient = MongoClients.create(dbConnectionEntity.getUrl())) {
-            MongoDatabase database = mongoClient.getDatabase(dbConnectionEntity.getDbName());
+        try (var mongoClient = MongoClients.create(connectionEntity.getUrl())) {
+            MongoDatabase database = mongoClient.getDatabase(connectionEntity.getDbName());
 
             List<Path> fileList = Files.list(backupPath)
                     .filter(file -> {

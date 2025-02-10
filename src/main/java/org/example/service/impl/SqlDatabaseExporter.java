@@ -59,6 +59,7 @@ public class SqlDatabaseExporter implements DatabaseExporter {
                 String tableBackupFilePath = currentBackupPath + "/" + table + "_" + timestamp + (key != null ? "_encrypted" : "") + ".csv.gz";
                 SecretKey secretKey = key != null ? EncryptionUtil.decodeKey(key) : null;
                 exportTableToFile(connection, table, tableBackupFilePath, secretKey);
+                //TODO: I should execute this fancy animation on a separte thread to avoid blocking the main thread...
                 ProgressBarUtil.printProgress(i + 1, totalTables);
                 Thread.sleep(200 * 4);
             }

@@ -5,9 +5,9 @@ import com.google.gson.Gson;
 import java.io.FileReader;
 import java.io.IOException;
 
-public class JsonFileUtil {
+public class FileUtil {
 
-    private JsonFileUtil() {
+    private FileUtil() {
     }
 
     public static <T> T readDataJsonFile(String path, Class<T> clazz) throws IOException {
