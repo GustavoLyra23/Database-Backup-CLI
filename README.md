@@ -13,6 +13,7 @@ This Java-based CLI tool automates database backup and restore operations with b
 - Automatic compression
 - Real-time progress monitoring
 - Flexible restoration options
+- Batch operations
 
 ## Prerequisites
 
