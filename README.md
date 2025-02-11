@@ -36,7 +36,6 @@ Generate a new encryption key:
 ```bash
 --generate key
 ```
-
 ### Database Configuration
 
 Set database connection parameters:
@@ -44,6 +43,16 @@ Set database connection parameters:
 --db <dbType> --url <url> [--password <password>] [--user <user>] [--dbName <database name>]
 ```
 
+Or set database info on data.json file: 
+```
+{
+  "url": "jdbc:mysql://localhost:3306/exampledb",
+  "user": "user",
+  "password": "userpassword",
+  "dbType": "sql",
+  "dbName": "exampledb"
+}
+```
 ### Backup Operations
 
 Create a new backup:
