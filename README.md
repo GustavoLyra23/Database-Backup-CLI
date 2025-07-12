@@ -115,11 +115,3 @@ Backups are automatically organized in the user's home directory:
 └── mongo/
     └── backup_yyyyMMdd_HHmmss.json.gz
 ```
-
-## Contributing
-
-We welcome contributions to improve the utility. Please submit issues and pull requests through our GitHub repository.
-
-## Security Notice
-
-This tool performs critical database operations. Always test thoroughly in a non-production environment before using in production systems.
