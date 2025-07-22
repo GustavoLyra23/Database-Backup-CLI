@@ -1,47 +1,41 @@
-package org.example.service.commands;
+package org.example.service.commands
 
-import org.example.entities.ConnectionEntity;
-import org.example.service.Command;
-import org.example.service.DatabaseRestorer;
-import org.example.service.impl.MongoDatabaseRestorer;
-import org.example.service.impl.SQLRestorer;
-import org.example.util.RegexUtil;
+import org.example.entities.ConnectionEntity
+import org.example.service.Command
+import org.example.service.DatabaseRestorer
+import org.example.service.impl.MongoDatabaseRestorer
+import org.example.service.impl.SQLRestorer
+import org.example.util.RegexUtil
+import java.util.*
+import java.util.List
 
-import java.util.List;
-import java.util.Objects;
-
-public class DoRestoreCommand implements Command {
-    private final ConnectionEntity connectionEntity;
-
-    public DoRestoreCommand(ConnectionEntity connectionEntity) {
-        this.connectionEntity = connectionEntity;
-    }
-
-    @Override
-    public synchronized void execute(String command) {
-        DatabaseRestorer restoreService;
-        String fileTypeDb = Objects.requireNonNull(RegexUtil.getFileTypeDb(command)).toLowerCase();
-        if (fileTypeDb.equalsIgnoreCase("mongo")) {
-            restoreService = MongoDatabaseRestorer.getInstance();
+class DoRestoreCommand(private val connectionEntity: ConnectionEntity?) : Command {
+    @Synchronized
+    override fun execute(command: String?) {
+        val restoreService: DatabaseRestorer?
+        val fileTypeDb =
+            Objects.requireNonNull<String?>(RegexUtil.getFileTypeDb(command)).lowercase(Locale.getDefault())
+        if (fileTypeDb.equals("mongo", ignoreCase = true)) {
+            restoreService = MongoDatabaseRestorer.instance
         } else {
-            restoreService = SQLRestorer.getInstance();
+            restoreService = SQLRestorer.instance
         }
 
-        String fileName = RegexUtil.getFileName(command);
-        String[] savesArray = RegexUtil.getSaves(command);
-        List<String> saves = (savesArray != null) ? List.of(savesArray) : null;
-        String key = RegexUtil.getRestoreKey(command);
+        val fileName = RegexUtil.getFileName(command)
+        val savesArray = RegexUtil.getSaves(command)
+        val saves = if (savesArray != null) List.of<String?>(*savesArray) else null
+        val key = RegexUtil.getRestoreKey(command)
 
         if (fileName == null || fileName.isEmpty()) {
-            System.out.println("Invalid restore parameters. Please provide a valid fileTypeDb and fileName.");
-            return;
+            println("Invalid restore parameters. Please provide a valid fileTypeDb and fileName.")
+            return
         }
         try {
-            restoreService.restoreDatabase(key, saves, fileTypeDb, fileName, connectionEntity);
-        } catch (IllegalArgumentException e) {
-            System.out.println("Error while restoring❗: " + e.getMessage());
-        } catch (UnsupportedOperationException e) {
-            System.out.println("Unsupported fileTypeDb❗.");
+            restoreService.restoreDatabase(key, saves, fileTypeDb, fileName, connectionEntity)
+        } catch (e: IllegalArgumentException) {
+            println("Error while restoring❗: " + e.message)
+        } catch (e: UnsupportedOperationException) {
+            println("Unsupported fileTypeDb❗.")
         }
     }
 }

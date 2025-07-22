@@ -1,24 +1,25 @@
-package org.example.util;
+package org.example.util
 
-public class ProgressBarUtil {
-    private static final String RESET = "\u001B[0m";
-    private static final String GREEN = "\u001B[32m";
+object ProgressBarUtil {
+    private const val RESET = "\u001B[0m"
+    private const val GREEN = "\u001B[32m"
 
-    public static void printProgress(int current, int total) {
-        int progressWidth = 30;
-        int progress = (int) ((double) current / total * progressWidth);
-        int percent = (current * 100 / total);
+    @JvmStatic
+    fun printProgress(current: Int, total: Int) {
+        val progressWidth = 30
+        val progress = (current.toDouble() / total * progressWidth).toInt()
+        val percent = (current * 100 / total)
 
-        StringBuilder progressBar = new StringBuilder("[");
+        val progressBar = StringBuilder("[")
 
-        for (int i = 0; i < progressWidth; i++) {
+        for (i in 0..<progressWidth) {
             if (i < progress) {
-                progressBar.append(GREEN).append("#");
+                progressBar.append(GREEN).append("#")
             } else {
-                progressBar.append(" ");
+                progressBar.append(" ")
             }
         }
-        progressBar.append(RESET).append("] ").append(percent).append("%");
-        System.out.print("\r" + progressBar);
+        progressBar.append(RESET).append("] ").append(percent).append("%")
+        print("\r" + progressBar)
     }
 }

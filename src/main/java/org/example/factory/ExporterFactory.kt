@@ -1,23 +1,20 @@
-package org.example.factory;
+package org.example.factory
 
-import org.example.entities.ConnectionEntity;
-import org.example.service.DatabaseExporter;
-import org.example.service.impl.MongoDatabaseExporter;
-import org.example.service.impl.SqlDatabaseExporter;
+import org.example.entities.ConnectionEntity
+import org.example.service.DatabaseExporter
+import org.example.service.impl.MongoDatabaseExporter
+import org.example.service.impl.SqlDatabaseExporter
 
-public class ExporterFactory {
-
-    private ExporterFactory() {
-    }
-
-    public static DatabaseExporter createExporter(ConnectionEntity connectionEntity) {
-        if ("SQL".equalsIgnoreCase(connectionEntity.getDbType())) {
-            return new SqlDatabaseExporter(connectionEntity.getUrl(), connectionEntity.getUser(), connectionEntity.getPassword());
+object ExporterFactory {
+    @JvmStatic
+    fun createExporter(connectionEntity: ConnectionEntity): DatabaseExporter {
+        if ("SQL".equals(connectionEntity.dbType, ignoreCase = true)) {
+            return SqlDatabaseExporter(connectionEntity.url, connectionEntity.user, connectionEntity.password)
         }
 
-        if ("MONGO".equalsIgnoreCase(connectionEntity.getDbType())) {
-            return new MongoDatabaseExporter(connectionEntity.getUrl(), connectionEntity.getDbName());
+        if ("MONGO".equals(connectionEntity.dbType, ignoreCase = true)) {
+            return MongoDatabaseExporter(connectionEntity.url, connectionEntity.dbName)
         }
-        throw new UnsupportedOperationException("Unsupported database❗...");
+        throw UnsupportedOperationException("Unsupported database❗...")
     }
 }

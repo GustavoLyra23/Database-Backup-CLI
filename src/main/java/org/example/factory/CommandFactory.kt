@@ -1,30 +1,24 @@
-package org.example.factory;
+package org.example.factory
 
-import org.example.entities.ConnectionEntity;
-import org.example.service.Command;
-import org.example.service.commands.*;
+import org.example.entities.ConnectionEntity
+import org.example.service.Command
+import org.example.service.commands.*
 
-public class CommandFactory {
-    private final ConnectionEntity connectionEntity;
-
-    public CommandFactory(ConnectionEntity connectionEntity) {
-        this.connectionEntity = connectionEntity;
-    }
-
-    public Command getCommand(String command) {
+class CommandFactory(private val connectionEntity: ConnectionEntity?) {
+    fun getCommand(command: String): Command? {
         //love if else <3
         if (command.contains("--generate key")) {
-            return new GenerateKeyCommand();
+            return GenerateKeyCommand()
         } else if (command.contains("--db")) {
-            return new SetDbParamsCommand(connectionEntity);
+            return SetDbParamsCommand(connectionEntity)
         } else if (command.contains("--do backup")) {
-            return new DoBackupCommand(connectionEntity);
+            return DoBackupCommand(connectionEntity)
         } else if (command.contains("--restore")) {
-            return new DoRestoreCommand(connectionEntity);
+            return DoRestoreCommand(connectionEntity)
         } else if (command.contains("--list")) {
-            return new ListAllCommand();
+            return ListAllCommand()
         } else {
-            return null;
+            return null
         }
     }
 }

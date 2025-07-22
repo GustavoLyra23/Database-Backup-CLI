@@ -1,7 +1,3 @@
-package org.example.exceptions;
+package org.example.exceptions
 
-public class BatchException extends RuntimeException {
-    public BatchException(String message) {
-        super(message);
-    }
-}
+class BatchException(message: String?) : RuntimeException(message)

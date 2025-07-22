@@ -1,101 +1,72 @@
-package org.example.entities;
+package org.example.entities
 
-public class ConnectionEntity {
-    private String dbType;
-    private String url;
-    private String user;
-    private String password;
-    private String dbName;
+class ConnectionEntity {
+    @JvmField
+    var dbType: String? = null
 
-    public ConnectionEntity() {
+    @JvmField
+    var url: String? = null
+
+    @JvmField
+    var user: String? = null
+
+    @JvmField
+    var password: String? = null
+
+    @JvmField
+    var dbName: String? = null
+
+    constructor()
+
+    constructor(dbType: String?, url: String?, user: String?, password: String?, dbName: String?) {
+        this.dbType = dbType
+        this.url = url
+        this.user = user
+        this.password = password
+        this.dbName = dbName
     }
 
-    public ConnectionEntity(String dbType, String url, String user, String password, String dbName) {
-        this.dbType = dbType;
-        this.url = url;
-        this.user = user;
-        this.password = password;
-        this.dbName = dbName;
-    }
+    class Builder {
+        private var dbType: String? = null
+        private var url: String? = null
+        private var user: String? = null
+        private var password: String? = null
+        private var dbName: String? = null
 
-    public static Builder builder() {
-        return new Builder();
-    }
-
-    public static class Builder {
-        private String dbType;
-        private String url;
-        private String user;
-        private String password;
-        private String dbName;
-
-        public Builder dbType(String dbType) {
-            this.dbType = dbType;
-            return this;
+        fun dbType(dbType: String?): Builder {
+            this.dbType = dbType
+            return this
         }
 
-        public Builder url(String url) {
-            this.url = url;
-            return this;
+        fun url(url: String?): Builder {
+            this.url = url
+            return this
         }
 
-        public Builder user(String user) {
-            this.user = user;
-            return this;
+        fun user(user: String?): Builder {
+            this.user = user
+            return this
         }
 
-        public Builder password(String password) {
-            this.password = password;
-            return this;
+        fun password(password: String?): Builder {
+            this.password = password
+            return this
         }
 
-        public Builder dbName(String dbName) {
-            this.dbName = dbName;
-            return this;
+        fun dbName(dbName: String?): Builder {
+            this.dbName = dbName
+            return this
         }
 
-        public ConnectionEntity build() {
-            return new ConnectionEntity(dbType, url, user, password, dbName);
+        fun build(): ConnectionEntity {
+            return ConnectionEntity(dbType, url, user, password, dbName)
         }
     }
-    public String getDbName() {
-        return dbName;
-    }
 
-    public void setDbName(String dbName) {
-        this.dbName = dbName;
-    }
-
-    public String getDbType() {
-        return dbType;
-    }
-
-    public void setDbType(String dbType) {
-        this.dbType = dbType;
-    }
-
-    public String getUrl() {
-        return this.url;
-    }
-
-    public void setUrl(String jdbcUrl) {
-        this.url = jdbcUrl;
-    }
-
-    public String getUser() {
-        return user;
-    }
-
-    public void setUser(String user) {
-        this.user = user;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
+    companion object {
+        fun builder(): Builder {
+            return Builder()
+        }
     }
 }
 

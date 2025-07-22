@@ -1,10 +1,13 @@
-package org.example.service;
+package org.example.service
 
-import org.example.entities.ConnectionEntity;
+import org.example.entities.ConnectionEntity
 
-import java.util.List;
-
-public interface DatabaseRestorer {
-
-    void restoreDatabase(String key, List<String> saves, String fileDbType, String fileName, ConnectionEntity connectionEntity);
+interface DatabaseRestorer {
+    fun restoreDatabase(
+        key: String?,
+        saves: MutableList<String?>?,
+        fileDbType: String?,
+        fileName: String?,
+        connectionEntity: ConnectionEntity?
+    )
 }

@@ -1,214 +1,230 @@
-package org.example.service.impl;
+package org.example.service.impl
 
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
-import org.example.entities.ConnectionEntity;
-import org.example.service.DatabaseRestorer;
-import org.example.util.EncryptionUtil;
-import org.example.util.ProgressBarUtil;
+import org.bouncycastle.jce.provider.BouncyCastleProvider
+import org.example.entities.ConnectionEntity
+import org.example.service.DatabaseRestorer
+import org.example.util.EncryptionUtil.decodeKey
+import org.example.util.ProgressBarUtil.printProgress
+import java.io.*
+import java.nio.file.Files
+import java.nio.file.Path
+import java.nio.file.Paths
+import java.security.Security
+import java.sql.Connection
+import java.sql.DriverManager
+import java.sql.SQLException
+import java.sql.Types
+import java.util.zip.GZIPInputStream
+import javax.crypto.Cipher
+import javax.crypto.CipherInputStream
 
-import javax.crypto.Cipher;
-import javax.crypto.CipherInputStream;
-import javax.crypto.SecretKey;
-import java.io.*;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.security.Security;
-import java.sql.*;
-import java.util.List;
-import java.util.zip.GZIPInputStream;
+class SQLRestorer private constructor() : DatabaseRestorer {
+    override fun restoreDatabase(
+        key: String?,
+        saves: MutableList<String?>?,
+        fileDbType: String?,
+        fileName: String?,
+        connectionEntity: ConnectionEntity?
+    ) {
+        if (fileDbType == null || fileName == null || connectionEntity == null) {
+            println("Invalid parameters provided for restore operation")
+            return
+        }
 
-public class SQLRestorer implements DatabaseRestorer {
-
-    static {
-        Security.addProvider(new BouncyCastleProvider());
-    }
-
-    private static final SQLRestorer instance = new SQLRestorer();
-
-    private SQLRestorer() {
-    }
-
-    public static SQLRestorer getInstance() {
-        return instance;
-    }
-
-    @Override
-    public void restoreDatabase(String key, List<String> saves, String fileDbType, String fileName, ConnectionEntity connectionEntity) {
-        Path backupPath = Paths.get(System.getProperty("user.home"), "backups", fileDbType, fileName);
+        val backupPath = Paths.get(System.getProperty("user.home"), "backups", fileDbType, fileName)
 
         if (!Files.isDirectory(backupPath)) {
-            System.out.println("Backup directory not found❗: " + backupPath);
-            return;
+            println("Backup directory not found❗: $backupPath")
+            return
         }
 
         try {
-            List<Path> fileList = Files.list(backupPath)
-                    .filter(file -> {
-                        String tableName = extractTableName(file.getFileName().toString());
-                        return saves == null || saves.isEmpty() || saves.contains(tableName);
-                    })
-                    .toList();
+            val fileList = Files.list(backupPath)
+                .filter { file ->
+                    val tableName = extractTableName(file.fileName.toString())
+                    saves.isNullOrEmpty() || saves.contains(tableName)
+                }
+                .toList()
 
             if (fileList.isEmpty()) {
-                System.out.println("No matching backup files found.");
-                return;
+                println("No matching backup files found.")
+                return
             }
 
-            try (Connection connection = DriverManager.getConnection(connectionEntity.getUrl(),
-                    connectionEntity.getUser(), connectionEntity.getPassword())) {
-                int totalFiles = fileList.size();
-                for (int i = 0; i < totalFiles; i++) {
-                    Path filePath = fileList.get(i);
+            DriverManager.getConnection(
+                connectionEntity.url,
+                connectionEntity.user,
+                connectionEntity.password
+            ).use { connection ->
+                val totalFiles = fileList.size
+                for (i in fileList.indices) {
+                    val filePath = fileList[i]
                     if (!processBackupFile(filePath, key, connection)) {
-                        System.out.println("Access denied for encrypted file: " + filePath.getFileName());
-                        return;
+                        println("Access denied for encrypted file: ${filePath.fileName}")
+                        return
                     }
-                    ProgressBarUtil.printProgress(i + 1, totalFiles);
-                    Thread.sleep(200 * 3);
+                    printProgress(i + 1, totalFiles)
+                    Thread.sleep(600)
                 }
-                System.out.println("\nRestore completed successfully.");
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
+                println("\nRestore completed successfully.")
             }
-
-        } catch (IOException e) {
-            System.err.println("Error accessing the directory: " + backupPath);
-        } catch (SQLException e) {
-            System.err.println("Error establishing database connection: " + e.getMessage());
+        } catch (e: IOException) {
+            System.err.println("Error accessing the directory: $backupPath")
+        } catch (e: SQLException) {
+            System.err.println("Error establishing database connection: ${e.message}")
         }
     }
 
-    private boolean processBackupFile(Path filePath, String key, Connection connection) {
-        String fileName = filePath.getFileName().toString();
-        boolean isEncrypted = fileName.contains("_encrypted");
+    private fun processBackupFile(filePath: Path, key: String?, connection: Connection): Boolean {
+        val fileName = filePath.fileName.toString()
+        val isEncrypted = "_encrypted" in fileName
 
         if (isEncrypted && key == null) {
-            System.out.println("Access denied: Encrypted file requires a key.");
-            return false;
+            println("Access denied: Encrypted file requires a key.")
+            return false
         }
 
-        Path extractedFilePath = Paths.get(filePath.toString().replace(".gz", ""));
-        try (InputStream fileInputStream = new FileInputStream(filePath.toFile());
-             GZIPInputStream gzipInputStream = new GZIPInputStream(fileInputStream);
-             FileOutputStream extractedFileOutputStream = new FileOutputStream(extractedFilePath.toFile())) {
+        val extractedFilePath = Paths.get(filePath.toString().replace(".gz", ""))
 
-            byte[] buffer = new byte[8192];
-            int len;
-            while ((len = gzipInputStream.read(buffer)) > 0) {
-                extractedFileOutputStream.write(buffer, 0, len);
+        // Decompress file
+        try {
+            FileInputStream(filePath.toFile()).use { fileInputStream ->
+                GZIPInputStream(fileInputStream).use { gzipInputStream ->
+                    FileOutputStream(extractedFilePath.toFile()).use { extractedFileOutputStream ->
+                        gzipInputStream.copyTo(extractedFileOutputStream)
+                    }
+                }
             }
-        } catch (IOException e) {
-            System.err.println("Error decompressing file: " + filePath + " - " + e.getMessage());
-            return false;
+        } catch (e: IOException) {
+            System.err.println("Error decompressing file: $filePath - ${e.message}")
+            return false
         }
 
-        try (InputStream finalInputStream = isEncrypted ? getDecryptedInputStream(new FileInputStream(extractedFilePath.toFile()), key)
-                : new FileInputStream(extractedFilePath.toFile());
-             BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(finalInputStream))) {
+        // Process decompressed file
+        try {
+            val inputStream = if (isEncrypted) {
+                getDecryptedInputStream(FileInputStream(extractedFilePath.toFile()), key)
+            } else {
+                FileInputStream(extractedFilePath.toFile())
+            }
 
-            String tableName = extractTableName(fileName);
-            restoreTableFromBackup(bufferedReader, tableName, connection);
-            return true;
-
-        } catch (Exception e) {
-            System.err.println("Error processing file: " + filePath + " - " + e.getMessage());
-            return false;
+            inputStream.use { finalInputStream ->
+                BufferedReader(InputStreamReader(finalInputStream)).use { bufferedReader ->
+                    val tableName = extractTableName(fileName)
+                    restoreTableFromBackup(bufferedReader, tableName, connection)
+                }
+            }
+            return true
+        } catch (e: Exception) {
+            System.err.println("Error processing file: $filePath - ${e.message}")
+            return false
         } finally {
             try {
-                Files.deleteIfExists(extractedFilePath);
-            } catch (IOException e) {
-                System.err.println("Failed to delete temporary extracted file: " + extractedFilePath);
+                Files.deleteIfExists(extractedFilePath)
+            } catch (e: IOException) {
+                System.err.println("Failed to delete temporary extracted file: $extractedFilePath")
             }
         }
     }
 
-    private InputStream getDecryptedInputStream(InputStream encryptedInputStream, String key) throws Exception {
-        SecretKey secretKey = EncryptionUtil.decodeKey(key);
-        Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding", "BC");
-        cipher.init(Cipher.DECRYPT_MODE, secretKey);
-        return new CipherInputStream(encryptedInputStream, cipher);
+    @Throws(Exception::class)
+    private fun getDecryptedInputStream(encryptedInputStream: InputStream, key: String?): InputStream {
+        val secretKey = decodeKey(key)
+        val cipher = Cipher.getInstance("AES/ECB/PKCS5Padding", "BC")
+        cipher.init(Cipher.DECRYPT_MODE, secretKey)
+        return CipherInputStream(encryptedInputStream, cipher)
     }
 
-    private String extractTableName(String fileName) {
-        int lastUnderscoreIndex = fileName.lastIndexOf("_2");
-        //TODO: ensure it works in 3000s as well :)
-        if (lastUnderscoreIndex != -1) {
-            return fileName.substring(0, lastUnderscoreIndex);
+    private fun extractTableName(fileName: String): String {
+        val lastUnderscoreIndex = fileName.lastIndexOf("_2")
+        return if (lastUnderscoreIndex != -1) {
+            fileName.substring(0, lastUnderscoreIndex)
+        } else {
+            fileName
         }
-        return fileName;
     }
 
-    private void restoreTableFromBackup(BufferedReader bufferedReader, String tableName, Connection connection) throws IOException, SQLException {
-        String line;
-        boolean schemaProcessed = false;
+    @Throws(IOException::class, SQLException::class)
+    private fun restoreTableFromBackup(bufferedReader: BufferedReader, tableName: String, connection: Connection) {
+        var schemaProcessed = false
 
-        while ((line = bufferedReader.readLine()) != null) {
-            if (line.startsWith("-- SCHEMA")) {
-                line = bufferedReader.readLine();
-                if (line != null && line.startsWith("CREATE TABLE")) {
-                    executeCreateTable(line, connection);
-                    schemaProcessed = true;
+        bufferedReader.forEachLine { line ->
+            when {
+                line.startsWith("-- SCHEMA") -> {
+                    val nextLine = bufferedReader.readLine()
+                    if (nextLine?.startsWith("CREATE TABLE") == true) {
+                        executeCreateTable(nextLine, connection)
+                        schemaProcessed = true
+                    }
                 }
-            } else if (schemaProcessed && line.startsWith("-- DATA")) {
-                bufferedReader.readLine();
-                while ((line = bufferedReader.readLine()) != null) {
-                    insertData(line, tableName, connection);
+
+                schemaProcessed && line.startsWith("-- DATA") -> {
+                    bufferedReader.readLine() // Skip header line
+                    bufferedReader.forEachLine { dataLine ->
+                        insertData(dataLine, tableName, connection)
+                    }
                 }
+            }
+        }
+    }
+
+    @Throws(SQLException::class)
+    private fun executeCreateTable(createStatement: String, connection: Connection) {
+        val tableNameFromStatement = createStatement.split(" ")[2]
+
+        connection.prepareStatement("DROP TABLE IF EXISTS $tableNameFromStatement").use { dropStmt ->
+            connection.prepareStatement(createStatement).use { createStmt ->
+                dropStmt.executeUpdate()
+                createStmt.executeUpdate()
             }
         }
     }
 
+    @Throws(SQLException::class)
+    private fun insertData(line: String, tableName: String, connection: Connection) {
+        if (line.isBlank()) return
 
-    private void executeCreateTable(String createStatement, Connection connection) throws SQLException {
-        String tableName = createStatement.split(" ")[2];
-        try (PreparedStatement dropStmt = connection.prepareStatement("DROP TABLE IF EXISTS " + tableName);
-             PreparedStatement createStmt = connection.prepareStatement(createStatement)) {
-            dropStmt.executeUpdate();
-            createStmt.executeUpdate();
+        val values = line.split(",").map { it.trim() }.toTypedArray()
+        val placeholders = values.joinToString(",") { "?" }
+        val insertQuery = "INSERT INTO $tableName VALUES ($placeholders)"
+
+        val metaData = connection.createStatement().use { statement ->
+            statement.executeQuery("SELECT * FROM $tableName LIMIT 1").use { rs ->
+                rs.metaData
+            }
+        }
+
+        try {
+            connection.prepareStatement(insertQuery).use { preparedStatement ->
+                values.forEachIndexed { index, value ->
+                    val columnType = metaData.getColumnType(index + 1)
+                    val trimmedValue = value.trim()
+
+                    when (columnType) {
+                        Types.BIGINT -> preparedStatement.setLong(index + 1, trimmedValue.toLong())
+                        Types.INTEGER -> preparedStatement.setInt(index + 1, trimmedValue.toInt())
+                        Types.DOUBLE -> preparedStatement.setDouble(index + 1, trimmedValue.toDouble())
+                        Types.FLOAT -> preparedStatement.setFloat(index + 1, trimmedValue.toFloat())
+                        Types.DATE -> preparedStatement.setDate(index + 1, java.sql.Date.valueOf(trimmedValue))
+                        else -> preparedStatement.setString(index + 1, trimmedValue)
+                    }
+                }
+                preparedStatement.executeUpdate()
+            }
+        } catch (e: SQLException) {
+            System.err.println("Error inserting data into $tableName: ${e.message}")
+            throw e
+        } catch (e: NumberFormatException) {
+            System.err.println("Error parsing data for $tableName: ${e.message}")
+            throw e
         }
     }
 
-    private void insertData(String line, String tableName, Connection connection) throws SQLException {
-        if (line == null || line.isEmpty()) return;
-        String[] values = line.split(",");
-        String placeholders = String.join(",", java.util.Collections.nCopies(values.length, "?"));
-        String query = "INSERT INTO " + tableName + " VALUES (" + placeholders + ")";
-        ResultSetMetaData metaData;
-        try (Statement statement = connection.createStatement();
-             ResultSet rs = statement.executeQuery("SELECT * FROM " + tableName + " LIMIT 1")) {
-            metaData = rs.getMetaData();
+    companion object {
+        init {
+            Security.addProvider(BouncyCastleProvider())
         }
 
-        try (PreparedStatement preparedStatement = connection.prepareStatement(query)) {
-            for (int i = 0; i < values.length; i++) {
-                int columnType = metaData.getColumnType(i + 1);
-                String value = values[i].trim();
-                switch (columnType) {
-                    case Types.BIGINT:
-                        preparedStatement.setLong(i + 1, Long.parseLong(value));
-                        break;
-                    case Types.INTEGER:
-                        preparedStatement.setInt(i + 1, Integer.parseInt(value));
-                        break;
-                    case Types.DOUBLE:
-                        preparedStatement.setDouble(i + 1, Double.parseDouble(value));
-                        break;
-                    case Types.FLOAT:
-                        preparedStatement.setFloat(i + 1, Float.parseFloat(value));
-                        break;
-                    case Types.DATE:
-                        preparedStatement.setDate(i + 1, Date.valueOf(value));
-                        break;
-                    default:
-                        preparedStatement.setString(i + 1, value);
-                        break;
-                }
-            }
-            preparedStatement.executeUpdate();
-        } catch (SQLException | NumberFormatException e) {
-            System.err.println("Error inserting data into " + tableName + ": " + e.getMessage());
-            throw e;
-        }
+        val instance: SQLRestorer = SQLRestorer()
     }
 }

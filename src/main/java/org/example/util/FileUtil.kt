@@ -1,19 +1,15 @@
-package org.example.util;
+package org.example.util
 
-import com.google.gson.Gson;
+import com.google.gson.Gson
+import java.io.FileReader
+import java.io.IOException
 
-import java.io.FileReader;
-import java.io.IOException;
-
-public class FileUtil {
-
-    private FileUtil() {
-    }
-
-    public static <T> T readDataJsonFile(String path, Class<T> clazz) throws IOException {
-        Gson gson = new Gson();
-        try (FileReader reader = new FileReader(path)) {
-            return gson.fromJson(reader, clazz);
+object FileUtil {
+    @Throws(IOException::class)
+    fun <T> readDataJsonFile(path: String, clazz: Class<T?>): T? {
+        val gson = Gson()
+        FileReader(path).use { reader ->
+            return gson.fromJson<T?>(reader, clazz)
         }
     }
 }
